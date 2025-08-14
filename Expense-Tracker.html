@@ -397,7 +397,7 @@
                         <div class="filter-group">
                             <label for="filterCategory">Filter by Category:</label>
                             <select id="filterCategory">
-                                <option value="">All Categories</option>
+                                <option value="all">All Categories</option>
                                 <option value="food">🍔 Food & Dining</option>
                                 <option value="transport">🚗 Transportation</option>
                                 <option value="entertainment">🎬 Entertainment</option>
@@ -410,7 +410,7 @@
                         <div class="filter-group">
                             <label for="filterDate">Filter by Date:</label>
                             <select id="filterDate">
-                                <option value="">All Time</option>
+                                <option value="all">All Time</option>
                                 <option value="today">Today</option>
                                 <option value="week">This Week</option>
                                 <option value="month">This Month</option>
@@ -440,6 +440,10 @@
         let totalExpenses = 0;
         let totalMonthlyExpenses = 0;
         let totalWeeklyExpenses = 0;
+
+        let filteredExpenses = [];
+        let filteredCategoryExpenses = [];
+        let filteredDateExpenses = [];
 
         const categories = {
             food: { total: 0, display: "🍔 Food & Dining" },
@@ -471,17 +475,17 @@
             document.getElementById('date').value = today;
         }
 
-        function displayExpenses() {
-            const expenseList = document.getElementById
+        function displayExpenses(chosenExpenses) {
 
-            if (expenses == 0) {
+            const expenseList = document.getElementById('expenseList');
+
+            if (chosenExpenses == 0) {
                 expenseList.innerHTML = '<div class="no-expenses">No expenses found. Add your first expense!</div>';
                 return;
             }
 
-
             let expenseHTML = '';
-            expenses.forEach(expense => {
+            chosenExpenses.forEach(expense => {
                 expenseHTML += `
                 <div class="expense-item">
                         <div class="expense-header">
@@ -490,18 +494,45 @@
                         </div>
                         <div class="expense-description">${expense.description}</div>
                         <div style="margin-top: 10px;">
-                            <span class="expense-category">${expense.category}</span>        
+                            <span class="expense-category">${categories[expense.category].display}</span>        
                         </div>
-                    </div >
-                `;
+                        </div >
+                        `;
             });
 
             document.getElementById("expenseList").innerHTML = expenseHTML;
         }
 
+        function filterExpensesByCategory(filteredCategory) {
+
+            if (filteredCategory == "" || filteredCategory == "all") {
+                filteredCategoryExpenses = expenses;
+            } else {
+                filteredCategoryExpenses = expenses.filter(expense => expense.category === filteredCategory);
+            }
+
+            displayExpenses(filteredCategoryExpenses);
+
+
+
+        }
+
+        function filterExpensesByDate(filteredDate) {
+
+            // if (filteredDate == "" || filteredDate == "all") {
+            //     filteredDateExpenses = expenses;
+            // } else {
+
+            //     filteredDateExpenses = expenses.filter(expense => dateFilter === filteredDate);
+            // }
+
+            // displayExpenses(filteredDateExpenses);
+        }
+
         function addTotalExpenses(expense) {
             totalExpenses += expense.amount;
             document.getElementById("totalSpent").textContent = `$${totalExpenses.toFixed(2)}`;
+            console.log("Total Expenses: ", totalExpenses.toFixed(2));
         }
 
         function addMonthlyExpenses(expense) {
@@ -511,6 +542,7 @@
             if (expenseDate.getMonth() === today.getMonth() && expenseDate.getFullYear() === today.getFullYear()) {
                 totalMonthlyExpenses += expense.amount;
                 document.getElementById("monthlySpent").textContent = `$${totalMonthlyExpenses.toFixed(2)}`;
+                console.log("Monthly Expenses: ", totalMonthlyExpenses.toFixed(2));
             }
         }
 
@@ -530,6 +562,7 @@
                 totalWeeklyExpenses += expense.amount;
                 document.getElementById("weeklySpent").textContent = `$${totalWeeklyExpenses.toFixed(2)}`;
             }
+            console.log("Monthly Expenses: ", totalWeeklyExpenses.toFixed(2));
         }
 
         function updateTopCategory(expense) {
@@ -570,14 +603,15 @@
             );
 
             document.getElementById("topCategory").textContent = categories[categoryLargest].display;
-
+            console.log("Top category changed to: ", categories[categoryLargest].display);
         }
+
 
         document.addEventListener('DOMContentLoaded', function () {
 
             //Set default date to today
             setDateToday();
-            displayExpenses();
+            displayExpenses(expenses);
 
             expenseFormInput = document.getElementById("expenseForm");
             expenseFormInput.addEventListener("submit", function (e) {
@@ -608,7 +642,7 @@
                 console.log("Total expenses:", expenses.length);
 
                 //Show in expense list
-                displayExpenses();
+                displayExpenses(expenses);
 
                 //Update top displays
                 addTotalExpenses(newExpense);
@@ -619,7 +653,29 @@
                 // Reset form after successful add
                 resetForm();
             });
+
         });
+
+        //Category Filter
+        filterCategory = document.getElementById("filterCategory");
+        filterCategory.addEventListener('change', function () {
+
+            console.log("Category filter changed!");
+            console.log("Selected category: ", this.value);
+
+            filterExpensesByCategory(this.value);
+        });
+
+        //Date Filter
+        filterDate = document.getElementById("filterDate");
+        filterDate.addEventListener('change', function () {
+
+            console.log("Date filter changed!");
+            console.log("Selected date: ", this.value);
+
+            filterExpensesByDate(this.value);
+        });
+
 
 
 
