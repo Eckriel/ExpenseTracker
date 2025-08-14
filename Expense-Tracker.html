@@ -435,6 +435,9 @@
         // Empty frontend - implement all functionality yourself!
         console.log("Frontend ready - build your expense tracker!");
 
+        let expenses = []; // Declare expenses array ONCE
+        let expenseFormInput;
+
         // You'll implement:
         // - Form submission handling
         // - Adding expenses to array/storage
@@ -443,6 +446,64 @@
         // - Filtering by category, date, search
         // - Edit/delete functionality
         // - Export and other features
+
+        function resetForm() {
+            expenseFormInput.reset();
+            setDateToday();
+        }
+
+        function setDateToday() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+        }
+
+        function updateExpenseList() {
+
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            //Set default date to today
+            setDateToday();
+
+            expenseFormInput = document.getElementById("expenseForm");
+            expenseFormInput.addEventListener("submit", function (e) {
+                e.preventDefault();
+
+
+                //Add expenses to custom object
+                const amount = parseFloat(document.getElementById("amount").value);
+                const description = document.getElementById("description").value;
+                const category = document.getElementById("category").value;
+                const date = document.getElementById("date").value;
+
+                if (isNaN(amount) || amount <= 0) {
+                    alert("Please enter a valid amount!");
+                    return;
+                }
+
+                const newExpense = {
+                    id: Date.now(),
+                    amount: amount,
+                    description: description,
+                    category: category,
+                    date: date
+                };
+
+                expenses.unshift(newExpense);
+                console.log("All expenses:", expenses);
+                console.log("Total expenses:", expenses.length);
+
+                //Show in expense list
+                updateExpenseList();
+
+                // Reset form after successful add
+                resetForm();
+            });
+        });
+
+
+
     </script>
 </body>
 
