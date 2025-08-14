@@ -645,6 +645,34 @@
             // Set today's date as default
             document.getElementById('date').value = new Date().toISOString().split('T')[0];
 
+            //Get expense information from user: Expense amount
+            const amountInput = document.getElementById("amount");
+            amountInput.addEventListener("input", function () {
+                const userAmount = amountInput.value;
+                console.log("User entered amount:", userAmount)
+            });
+
+            //:Description
+            const descriptionInput = document.getElementById("description");
+            descriptionInput.addEventListener("input", function () {
+                const userDescription = descriptionInput.value;
+                console.log("User entered description: ", userDescription);
+            });
+
+            //:Category
+            const categoryInput = document.getElementById("category");
+            categoryInput.addEventListener("input", function () {
+                const userCategory = categoryInput.value;
+                console.log("User chose category: ", userCategory);
+            });
+
+            //:Date
+            const dateInput = document.getElementById("date");
+            dateInput.addEventListener("input", function () {
+                const userDate = dateInput.value;
+                console.log("User set date to: ", userDate);
+            });
+
             // Load and display expenses
             loadExpenses();
             updateStats();
