@@ -438,6 +438,19 @@
         let expenses = []; // Declare expenses array ONCE
         let expenseFormInput;
         let totalExpenses = 0;
+        let totalMonthlyExpenses = 0;
+        let totalWeeklyExpenses = 0;
+
+        let categoryTotals = {
+            food: 0,
+            transport: 0,
+            entertainment: 0,
+            utilities: 0,
+            healthcare: 0,
+            shopping: 0,
+            other: 0
+        };
+
 
         // You'll implement:
         // - Form submission handling
@@ -486,9 +499,76 @@
             document.getElementById("expenseList").innerHTML = expenseHTML;
         }
 
-        function addTotalExpenses(amount) {
-            totalExpenses += amount;
+        function addTotalExpenses(expense) {
+            totalExpenses += expense.amount;
             document.getElementById("totalSpent").textContent = `$${totalExpenses.toFixed(2)}`;
+        }
+
+        function addMonthlyExpenses(expense) {
+            const expenseDate = new Date(expense.date);
+            const today = new Date();
+
+            if (expenseDate.getMonth() === today.getMonth() && expenseDate.getFullYear() === today.getFullYear()) {
+                totalMonthlyExpenses += expense.amount;
+                document.getElementById("monthlySpent").textContent = `$${totalMonthlyExpenses.toFixed(2)}`;
+            }
+        }
+
+        function addWeeklyExpenses(expense) {
+            const expenseDate = new Date(expense.date);
+            const today = new Date();
+
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay() + 1);
+            weekStart.setHours(0, 0, 0, 0);
+
+            const weekEnd = new Date(today);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
+
+            if (expenseDate >= weekStart && expenseDate <= weekEnd) {
+                totalWeeklyExpenses += expense.amount;
+                document.getElementById("weeklySpent").textContent = `$${totalWeeklyExpenses.toFixed(2)}`;
+            }
+        }
+
+        function updateTopCategory(expense) {
+            const expenseCatergory = expense.category;
+            const expenseAmount = expense.amount;
+            switch (expenseCatergory) {
+                case 'food':
+                    categoryTotals.food += expenseAmount;
+                    break;
+                case 'transport':
+                    categoryTotals.transport += expenseAmount;
+                    break;
+                case 'entertainment':
+                    categoryTotals.entertainment += expenseAmount;
+                    break;
+                case 'utilities':
+                    categoryTotals.utilities += expenseAmount;
+                    break;
+                case 'healthcare':
+                    categoryTotals.healthcare += expenseAmount;
+                    break;
+                case 'shopping':
+                    categoryTotals.shopping += expenseAmount;
+                    break;
+                case 'other':
+                    categoryTotals.other += expenseAmount;
+                    break;
+                default:
+                    break;
+            }
+
+            const largest = Math.max(...Object.values(categoryTotals));
+
+            const categoryLargest = Object.keys(categoryTotals).reduce((a, b) =>
+                categoryTotals[a] > categoryTotals[b] ? a : b
+            );
+
+            document.getElementById("topCategory").textContent = categoryLargest;
+
         }
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -527,7 +607,12 @@
 
                 //Show in expense list
                 displayExpenses();
-                addTotalExpenses(amount);
+
+                //Update top displays
+                addTotalExpenses(newExpense);
+                addMonthlyExpenses(newExpense);
+                addWeeklyExpenses(newExpense);
+                updateTopCategory(newExpense);
 
                 // Reset form after successful add
                 resetForm();
