@@ -441,14 +441,14 @@
         let totalMonthlyExpenses = 0;
         let totalWeeklyExpenses = 0;
 
-        let categoryTotals = {
-            food: 0,
-            transport: 0,
-            entertainment: 0,
-            utilities: 0,
-            healthcare: 0,
-            shopping: 0,
-            other: 0
+        const categories = {
+            food: { total: 0, display: "🍔 Food & Dining" },
+            transport: { total: 0, display: "🚗 Transportation" },
+            entertainment: { total: 0, display: "🎬 Entertainment" },
+            utilities: { total: 0, display: "💡 Utilities" },
+            healthcare: { total: 0, display: "🏥 Healthcare" },
+            shopping: { total: 0, display: "🛍️ Shopping" },
+            other: { total: 0, display: "📦 Other" }
         };
 
 
@@ -537,37 +537,39 @@
             const expenseAmount = expense.amount;
             switch (expenseCatergory) {
                 case 'food':
-                    categoryTotals.food += expenseAmount;
+                    categories.food.total += expenseAmount;
                     break;
                 case 'transport':
-                    categoryTotals.transport += expenseAmount;
+                    categories.transport.total += expenseAmount;
                     break;
                 case 'entertainment':
-                    categoryTotals.entertainment += expenseAmount;
+                    categories.entertainment.total += expenseAmount;
                     break;
                 case 'utilities':
-                    categoryTotals.utilities += expenseAmount;
+                    categories.utilities.total += expenseAmount;
                     break;
                 case 'healthcare':
-                    categoryTotals.healthcare += expenseAmount;
+                    categories.healthcare.total += expenseAmount;
                     break;
                 case 'shopping':
-                    categoryTotals.shopping += expenseAmount;
+                    categories.shopping.total += expenseAmount;
                     break;
                 case 'other':
-                    categoryTotals.other += expenseAmount;
+                    categories.other.total += expenseAmount;
                     break;
                 default:
                     break;
             }
 
-            const largest = Math.max(...Object.values(categoryTotals));
+            //Find largest value
+            // const largest = Math.max(...Object.values(categoryTotals));
 
-            const categoryLargest = Object.keys(categoryTotals).reduce((a, b) =>
-                categoryTotals[a] > categoryTotals[b] ? a : b
+            //Weird comparison to compare numbers of categoryTotals
+            const categoryLargest = Object.keys(categories).reduce((a, b) =>
+                categories[a].total > categories[b].total ? a : b
             );
 
-            document.getElementById("topCategory").textContent = categoryLargest;
+            document.getElementById("topCategory").textContent = categories[categoryLargest].display;
 
         }
 
