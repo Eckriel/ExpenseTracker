@@ -512,14 +512,13 @@
             }
 
             displayExpenses(filteredCategoryExpenses);
-
-
-
         }
 
         function filterExpensesByDate(filteredDate) {
+            //Date Calculation
             const today = new Date();
 
+            //Week Calculation
             const weekStart = new Date(today);
             weekStart.setDate(today.getDate() - today.getDay() + 1);
             weekStart.setHours(0, 0, 0, 0);
@@ -528,13 +527,11 @@
             weekEnd.setDate(weekStart.getDate() + 6);
             weekEnd.setHours(23, 59, 59, 999);
 
-            // console.log(today.getDate(), today.getDay());
+            //Month Calculation
+            const [year, monthNum, dayNum] = formatDate(new Date(today)).split('-').map(Number);
 
-            // console.log("Today:", formatDate(today));
-            // console.log("Week start:", formatDate(weekStart));
-            // console.log("Week end:", formatDate(weekEnd));
-            // console.log("Today's day of week:", today.getDay()); // 0=Sunday, 1=Monday, etc.
 
+            //Apply filter 
             if (filteredDate == "" || filteredDate == "all") {
                 filteredDateExpenses = expenses;
             } else if (filteredDate == "today") {
@@ -544,10 +541,13 @@
                 // }
             } else if (filteredDate == "week") {
                 filteredDateExpenses = expenses.filter(expense =>
-                    expense.date >= formatDate(weekStart) && expense.date <= formatDate(weekEnd));
-                // filteredDateExpenses = "";
+                    expense.date > formatDate(weekStart) && expense.date <= formatDate(weekEnd));
             } else if (filteredDate == "month") {
-                // filteredDateExpenses = "";
+                const [expenseYear, expenseMonthNum, expenseDayNum] = formatDate(today).split('-').map(Number);
+                filteredDateExpenses = expenses.filter(expense => {
+                    const [expenseYear, expenseMonthNum, expenseDayNum] = expense.date.split('-').map(Number);
+                    return expenseMonthNum === monthNum;
+                });
             }
 
             displayExpenses(filteredDateExpenses);
@@ -622,9 +622,6 @@
                     break;
             }
 
-            //Find largest value
-            // const largest = Math.max(...Object.values(categoryTotals));
-
             //Weird comparison to compare numbers of categoryTotals
             const categoryLargest = Object.keys(categories).reduce((a, b) =>
                 categories[a].total > categories[b].total ? a : b
@@ -669,8 +666,11 @@
                 console.log("All expenses:", expenses);
                 console.log("Total expenses:", expenses.length);
 
-                //Show in expense list
-                displayExpenses(expenses);
+                //Going to have to check filters then display
+                filterExpensesByCategory(document.getElementById("filterCategory").value);
+                filterExpensesByDate(document.getElementById("filterDate").value);
+                //Show in expense list Probably remove
+                // displayExpenses(expenses);
 
                 //Update top displays
                 addTotalExpenses(newExpense);
@@ -692,6 +692,7 @@
             console.log("Selected category: ", this.value);
 
             filterExpensesByCategory(this.value);
+
         });
 
         //Date Filter
