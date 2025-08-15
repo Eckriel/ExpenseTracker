@@ -519,7 +519,7 @@
                         <div class="filter-row">
                             <div class="filter-group">
                                 <label>Filter by Category:</label>
-                                <select id="filterCategory" onchange="filterExpenses()">
+                                <select id="filterCategory">
                                     <option value="">All Categories</option>
                                     <option value="food">🍔 Food & Dining</option>
                                     <option value="transport">🚗 Transportation</option>
@@ -532,18 +532,17 @@
                             </div>
                             <div class="filter-group">
                                 <label>Filter by Date:</label>
-                                <select id="filterDate" onchange="filterExpenses()">
+                                <select id="filterDate">
                                     <option value="">All Time</option>
                                     <option value="today">Today</option>
                                     <option value="week">This Week</option>
                                     <option value="month">This Month</option>
-                                    <option value="custom">Custom Range</option>
+                                    <!-- <option value="custom">Custom Range</option> -->
                                 </select>
                             </div>
                             <div class="filter-group">
                                 <label>Search:</label>
-                                <input type="text" id="searchBox" placeholder="Search descriptions..."
-                                    oninput="filterExpenses()">
+                                <input type="text" id="searchBox" placeholder="Search descriptions...">
                             </div>
                         </div>
                     </div>
@@ -639,6 +638,7 @@
 
         let expenses = []; // Declare expenses array ONCE
         let expenseFormInput;
+
         let totalExpenses = 0;
         let totalMonthlyExpenses = 0;
         let totalWeeklyExpenses = 0;
@@ -647,6 +647,8 @@
         let filteredCategoryExpenses = [];
         let filteredDateExpenses = [];
         let filteredSearchExpenses = [];
+
+        let monthlyBudget = 1000;
 
         const categories = {
             food: { total: 0, display: "🍔 Food & Dining" },
@@ -665,6 +667,7 @@
         };
 
         function resetForm() {
+            const expenseFormInput = document.getElementById('expenseForm');
             expenseFormInput.reset();
             setDateToday();
         }
@@ -672,6 +675,45 @@
         function setDateToday() {
             const today = formatDate(new Date());
             document.getElementById('date').value = today;
+        }
+
+        function addExpense() {
+            //Add expenses to custom object
+            const amount = parseFloat(document.getElementById("amount").value);
+            const description = document.getElementById("description").value;
+            const category = document.getElementById("category").value;
+            const date = document.getElementById("date").value;
+
+            if (isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid amount!");
+                return;
+            }
+
+            const newExpense = {
+                id: Date.now(),
+                amount: amount,
+                description: description,
+                category: category,
+                date: date
+            };
+
+            expenses.unshift(newExpense);
+            console.log("All expenses:", expenses);
+            console.log("Total expenses:", expenses.length);
+
+            //Show in expense list
+            applyAllFilters();
+
+            //Update top displays
+            addTotalExpenses(newExpense)
+
+
+
+            addMonthlyExpenses(newExpense);
+            addWeeklyExpenses(newExpense);
+            updateTopCategory(newExpense);
+
+            resetForm();
         }
 
         function displayExpenses(chosenExpenses) {
@@ -697,12 +739,12 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
                         <span class="expense-category">${categories[expense.category].display}</span>
                         <div class="expense-actions">
-                            <button class="btn btn-secondary" onclick="editExpense()" style="padding: 5px 10px; font-size: 0.8rem;">✏️ Edit</button> <!--${expense.id}-->
-                            <button class="btn btn-danger" onclick="deleteExpense()" style="padding: 5px 10px; font-size: 0.8rem;">🗑️ Delete</button> <!--${expense.id}-->
+                            <button class="btn btn-secondary" onclick="editExpense(${expense.id})" style="padding: 5px 10px; font-size: 0.8rem;">✏️ Edit</button> <!--${expense.id}-->
+                            <button class="btn btn-danger" onclick="deleteExpense(${expense.id})" style="padding: 5px 10px; font-size: 0.8rem;">🗑️ Delete</button> <!--${expense.id}-->
                         </div>
                     </div>
                 </div>
-    `;
+            `;
             });
 
             document.getElementById("expenseList").innerHTML = expenseHTML;
@@ -771,29 +813,20 @@
             if (isActiveFilter(currentFilters.category)) {
                 const categoryMatches = filterExpensesByCategory(currentFilters.category, expenses);
                 filteredExpenses = categoryMatches;
-                // filteredExpenses = filteredExpenses.concat(categoryMatches);
                 hasActiveFilters = true;
             }
-
-            console.log("Filtered expenses are: ", filteredExpenses);
 
             if (isActiveFilter(currentFilters.date)) {
                 const dateMatches = filterExpensesByDate(currentFilters.date, expenses);
                 filteredExpenses = dateMatches;
-                // filteredExpenses = filteredExpenses.concat(dateMatches);
                 hasActiveFilters = true;
             }
-
-            console.log("Filtered expenses are: ", filteredExpenses);
 
             if (isActiveFilter(currentFilters.search)) {
                 const searchMatches = filterExpensesBySearch(expenses);
                 filteredExpenses = searchMatches;
-                // filteredExpenses = filteredExpenses.concat(searchMatches);
                 hasActiveFilters = true;
             }
-
-            console.log("Filtered expenses are: ", filteredExpenses);
 
             if (isActiveFilter(currentFilters.category) && isActiveFilter(currentFilters.date)) {
                 const categoryMatches = filterExpensesByCategory(currentFilters.category, expenses);
@@ -801,8 +834,6 @@
                 filteredExpenses = filterExpensesByDate(currentFilters.date, categoryMatches);
                 hasActiveFilters = true;
             }
-
-            console.log("Filtered expenses are: ", filteredExpenses);
 
             if (isActiveFilter(currentFilters.category) && isActiveFilter(currentFilters.search)) {
                 const categoryMatches = filterExpensesByCategory(currentFilters.category, expenses);
@@ -818,13 +849,11 @@
                 hasActiveFilters = true;
             }
 
-            console.log("Filtered expenses are: ", filteredExpenses);
-
             if (isActiveFilter(currentFilters.category) && isActiveFilter(currentFilters.date) && isActiveFilter(currentFilters.search)) {
                 const categoryMatches = filterExpensesByCategory(currentFilters.category, expenses);
                 const categoryDateMatches = filterExpensesByDate(currentFilters.date, categoryMatches);
                 const categoryDateSearchMatches = filterExpensesBySearch(categoryDateMatches)
-                filteredExpense = categoryDateSearchMatches;
+                filteredExpenses = categoryDateSearchMatches;
                 hasActiveFilters = true;
             }
 
@@ -914,68 +943,114 @@
             console.log("Top category changed to: ", categories[categoryLargest].display);
         }
 
-        function showTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
+        // function setBudget() {
+        //     const form = document.getElementById('budgetForm');
+        //     monthlyBudget = parseFloat(form.budgetAmount.value);
+        //     showMessage(`Monthly budget set to ${monthlyBudget.toFixed(2)}!`, 'success');
+        //     closeBudgetModal();
+        // }
 
-            // Show selected tab
-            document.getElementById(tabName + '-tab').classList.add('active');
-            event.target.classList.add('active');
+        function updateExpense() {
+            const formId = parseInt(document.getElementById('editExpenseId').value);
+            const editedExpense = expenses.find(expense => expense.id === formId);
+
+            editedExpense.amount = parseFloat(document.getElementById('editAmount').value);
+            editedExpense.description = document.getElementById('editDescription').value;
+            editedExpense.category = document.getElementById('editCategory').value;
+            editedExpense.date = document.getElementById('editDate').value;
+
+            applyAllFilters(expenses);
+            closeEditModal();
         }
 
+        //Form
         document.addEventListener('DOMContentLoaded', function () {
 
             //Set default date to today
             setDateToday();
             displayExpenses(expenses);
 
-            expenseFormInput = document.getElementById("expenseForm");
-            expenseFormInput.addEventListener("submit", function (e) {
+            //Form handlers
+            setupFormHandlers();
+            setupModalHandlers();
+
+            //Filter handlers
+            filterHandler();
+        });
+
+        function editExpense(id) {
+            const expense = expenses.find(exp => exp.id === id);
+            if (!expense) return;
+
+            document.getElementById('editExpenseId').value = expense.id;
+            document.getElementById('editAmount').value = expense.amount;
+            document.getElementById('editDescription').value = expense.description;
+            document.getElementById('editCategory').value = expense.category;
+            document.getElementById('editDate').value = expense.date;
+
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function deleteExpense(id) {
+            const deleteExpense = expenses.find(expense => expense.id === id);
+            if (!deleteExpense) return;
+
+            expenses.splice(deleteExpense, 1);
+            displayExpenses(expenses);
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function showBudgetModal() {
+            document.getElementById('budgetAmount').value = monthlyBudget;
+            document.getElementById('budgetModal').style.display = 'block';
+        }
+
+        function closeBudgetModal() {
+            document.getElementById('budgetModal').style.display = 'none';
+        }
+
+        function setupFormHandlers() {
+            // Add expense form
+            document.getElementById('expenseForm').addEventListener('submit', function (e) {
                 e.preventDefault();
-
-
-                //Add expenses to custom object
-                const amount = parseFloat(document.getElementById("amount").value);
-                const description = document.getElementById("description").value;
-                const category = document.getElementById("category").value;
-                const date = document.getElementById("date").value;
-
-                if (isNaN(amount) || amount <= 0) {
-                    alert("Please enter a valid amount!");
-                    return;
-                }
-
-                const newExpense = {
-                    id: Date.now(),
-                    amount: amount,
-                    description: description,
-                    category: category,
-                    date: date
-                };
-
-                expenses.unshift(newExpense);
-                console.log("All expenses:", expenses);
-                console.log("Total expenses:", expenses.length);
-
-                //Show in expense list
-                applyAllFilters();
-
-                //Update top displays
-                addTotalExpenses(newExpense)
-
-                addMonthlyExpenses(newExpense);
-                addWeeklyExpenses(newExpense);
-                updateTopCategory(newExpense);
-
-                // Reset form after successful add
-                resetForm();
+                addExpense();
             });
 
+            // Edit expense form
+            document.getElementById('editExpenseForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                updateExpense();
+            });
+
+            // Budget form
+            document.getElementById('budgetForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                setBudget();
+            });
+        }
+
+        function setupModalHandlers() {
+            // Close modals when clicking the X
+            document.querySelectorAll('.close').forEach(closeBtn => {
+                closeBtn.addEventListener('click', function () {
+                    closeEditModal();
+                    closeBudgetModal();
+                });
+            });
+
+            // Close modals when clicking outside
+            window.addEventListener('click', function (e) {
+                if (e.target.classList.contains('modal')) {
+                    closeEditModal();
+                    closeBudgetModal();
+                }
+            });
+        }
+
+        function filterHandler() {
             //Category Filter
             filterCategory = document.getElementById("filterCategory");
             filterCategory.addEventListener('change', function () {
@@ -1006,7 +1081,7 @@
                 currentFilters.search = this.value;
                 applyAllFilters();
             });
-        });
+        }
 
     </script>
 </body>
