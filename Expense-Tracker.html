@@ -184,6 +184,22 @@
             background: #229954;
         }
 
+        .filters {
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
         .expense-list {
             max-height: 600px;
             overflow-y: auto;
@@ -245,11 +261,64 @@
             font-size: 0.8rem;
         }
 
-        .no-expenses {
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .chart-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
             text-align: center;
-            color: #7f8c8d;
-            font-style: italic;
-            padding: 40px;
+        }
+
+        .chart-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            margin-top: 10px;
         }
 
         .quick-actions {
@@ -259,28 +328,44 @@
             flex-wrap: wrap;
         }
 
-        .filter-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
+        .category-colors {
+            food: #e74c3c;
+            transport: #3498db;
+            entertainment: #9b59b6;
+            utilities: #f39c12;
+            healthcare: #1abc9c;
+            shopping: #e67e22;
+            other: #95a5a6;
         }
 
-        .filter-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
+        .no-expenses {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 40px;
         }
 
-        .filter-group {
-            flex: 1;
-            min-width: 150px;
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-style: italic;
+            padding: 20px;
         }
 
-        .filter-group label {
-            font-size: 0.9rem;
-            margin-bottom: 5px;
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
         }
 
         @media (max-width: 768px) {
@@ -304,6 +389,39 @@
             .header h1 {
                 font-size: 2rem;
             }
+        }
+
+        .tab-navigation {
+            display: flex;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
     </style>
 </head>
@@ -379,55 +497,139 @@
                 <div class="form-section">
                     <h2>⚡ Quick Actions</h2>
                     <div class="quick-actions">
-                        <button class="btn btn-secondary">📤 Export</button>
-                        <button class="btn btn-secondary">🎯 Set Budget</button>
-                        <button class="btn btn-danger">🗑️ Clear All</button>
+                        <button class="btn btn-secondary" onclick="exportExpenses()">📤 Export</button>
+                        <button class="btn btn-secondary" onclick="showBudgetModal()">🎯 Set Budget</button>
+                        <button class="btn btn-danger" onclick="clearAllExpenses()">🗑️ Clear All</button>
                     </div>
                 </div>
             </div>
 
             <!-- Content Area -->
             <div class="content-area">
-                <h2>📋 Expense List</h2>
+                <!-- Tab Navigation -->
+                <div class="tab-navigation">
+                    <button class="tab-button active" onclick="showTab('expenses')">📋 Expenses</button>
+                    <button class="tab-button" onclick="showTab('analytics')">📊 Analytics</button>
+                </div>
 
-                <!-- Filter Section -->
-                <div class="filter-section">
-                    <h3>🔍 Filter Expenses</h3>
-                    <div class="filter-row">
-                        <div class="filter-group">
-                            <label for="filterCategory">Filter by Category:</label>
-                            <select id="filterCategory">
-                                <option value="all">All Categories</option>
-                                <option value="food">🍔 Food & Dining</option>
-                                <option value="transport">🚗 Transportation</option>
-                                <option value="entertainment">🎬 Entertainment</option>
-                                <option value="utilities">💡 Utilities</option>
-                                <option value="healthcare">🏥 Healthcare</option>
-                                <option value="shopping">🛍️ Shopping</option>
-                                <option value="other">📦 Other</option>
-                            </select>
+                <!-- Expenses Tab -->
+                <div id="expenses-tab" class="tab-content active">
+                    <!-- Filters -->
+                    <div class="filters">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label>Filter by Category:</label>
+                                <select id="filterCategory" onchange="filterExpenses()">
+                                    <option value="">All Categories</option>
+                                    <option value="food">🍔 Food & Dining</option>
+                                    <option value="transport">🚗 Transportation</option>
+                                    <option value="entertainment">🎬 Entertainment</option>
+                                    <option value="utilities">💡 Utilities</option>
+                                    <option value="healthcare">🏥 Healthcare</option>
+                                    <option value="shopping">🛍️ Shopping</option>
+                                    <option value="other">📦 Other</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Filter by Date:</label>
+                                <select id="filterDate" onchange="filterExpenses()">
+                                    <option value="">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                    <option value="custom">Custom Range</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Search:</label>
+                                <input type="text" id="searchBox" placeholder="Search descriptions..."
+                                    oninput="filterExpenses()">
+                            </div>
                         </div>
-                        <div class="filter-group">
-                            <label for="filterDate">Filter by Date:</label>
-                            <select id="filterDate">
-                                <option value="all">All Time</option>
-                                <option value="today">Today</option>
-                                <option value="week">This Week</option>
-                                <option value="month">This Month</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="searchBox">Search:</label>
-                            <input type="text" id="searchBox" placeholder="Search descriptions...">
-                        </div>
+                    </div>
+
+                    <!-- Expense List -->
+                    <div class="expense-list" id="expenseList">
+                        <div class="loading">Loading expenses...</div>
                     </div>
                 </div>
 
-                <!-- Expense List -->
-                <div class="expense-list" id="expenseList">
-                    <div class="no-expenses">No expenses found. Add your first expense!</div>
+                <!-- Analytics Tab -->
+                <div id="analytics-tab" class="tab-content">
+                    <h2>📊 Spending Analytics</h2>
+                    <div class="analytics-grid">
+                        <div class="chart-container">
+                            <h3>Category Breakdown</h3>
+                            <div class="chart-placeholder">
+                                📊 Category chart will show here
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h3>Monthly Trends</h3>
+                            <div class="chart-placeholder">
+                                📈 Monthly spending trends
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Edit Expense Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>✏️ Edit Expense</h2>
+            <form id="editExpenseForm">
+                <input type="hidden" id="editExpenseId">
+                <div class="form-group">
+                    <label for="editAmount">Amount ($)</label>
+                    <input type="number" id="editAmount" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editDescription">Description</label>
+                    <input type="text" id="editDescription" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCategory">Category</label>
+                    <select id="editCategory" required>
+                        <option value="food">🍔 Food & Dining</option>
+                        <option value="transport">🚗 Transportation</option>
+                        <option value="entertainment">🎬 Entertainment</option>
+                        <option value="utilities">💡 Utilities</option>
+                        <option value="healthcare">🏥 Healthcare</option>
+                        <option value="shopping">🛍️ Shopping</option>
+                        <option value="other">📦 Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editDate">Date</label>
+                    <input type="date" id="editDate" required>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">💾 Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">❌ Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Budget Modal -->
+    <div id="budgetModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>🎯 Set Monthly Budget</h2>
+            <form id="budgetForm">
+                <div class="form-group">
+                    <label for="budgetAmount">Monthly Budget ($)</label>
+                    <input type="number" id="budgetAmount" step="0.01" min="0" required>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">💾 Set Budget</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeBudgetModal()">❌ Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -484,17 +686,23 @@
             let expenseHTML = '';
             chosenExpenses.forEach(expense => {
                 expenseHTML += `
-                <div class="expense-item">
-                        <div class="expense-header">
-                                <div class="expense-amount">-$${expense.amount.toFixed(2)}</div>
-                                <div class = "expense-date">${expense.date}</div>
+                
+            </div>
+            <div class="expense-item">
+                    <div class="expense-header">
+                        <div class="expense-amount">-$${expense.amount.toFixed(2)}</div>
+                        <div class="expense-date">${expense.date}</div>
+                    </div>
+                    <div class="expense-description">${expense.description}</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                        <span class="expense-category">${categories[expense.category].display}</span>
+                        <div class="expense-actions">
+                            <button class="btn btn-secondary" onclick="editExpense()" style="padding: 5px 10px; font-size: 0.8rem;">✏️ Edit</button> <!--${expense.id}-->
+                            <button class="btn btn-danger" onclick="deleteExpense()" style="padding: 5px 10px; font-size: 0.8rem;">🗑️ Delete</button> <!--${expense.id}-->
                         </div>
-                        <div class="expense-description">${expense.description}</div>
-                        <div style="margin-top: 10px;">
-                            <span class="expense-category">${categories[expense.category].display}</span>        
-                        </div>
-                        </div >
-                        `;
+                    </div>
+                </div>
+    `;
             });
 
             document.getElementById("expenseList").innerHTML = expenseHTML;
@@ -755,6 +963,7 @@
                 resetForm();
             });
 
+            //Category Filter
             filterCategory = document.getElementById("filterCategory");
             filterCategory.addEventListener('change', function () {
 
@@ -785,11 +994,6 @@
                 applyAllFilters();
             });
         });
-
-        //Category Filter
-
-
-
 
     </script>
 </body>
