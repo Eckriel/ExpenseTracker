@@ -471,7 +471,7 @@
         }
 
         function setDateToday() {
-            const today = new Date().toISOString().split('T')[0];
+            const today = formatDate(new Date());
             document.getElementById('date').value = today;
         }
 
@@ -518,15 +518,43 @@
         }
 
         function filterExpensesByDate(filteredDate) {
+            const today = new Date();
 
-            // if (filteredDate == "" || filteredDate == "all") {
-            //     filteredDateExpenses = expenses;
-            // } else {
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay() + 1);
+            weekStart.setHours(0, 0, 0, 0);
 
-            //     filteredDateExpenses = expenses.filter(expense => dateFilter === filteredDate);
-            // }
+            const weekEnd = new Date(today);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
 
-            // displayExpenses(filteredDateExpenses);
+            // console.log(today.getDate(), today.getDay());
+
+            // console.log("Today:", formatDate(today));
+            // console.log("Week start:", formatDate(weekStart));
+            // console.log("Week end:", formatDate(weekEnd));
+            // console.log("Today's day of week:", today.getDay()); // 0=Sunday, 1=Monday, etc.
+
+            if (filteredDate == "" || filteredDate == "all") {
+                filteredDateExpenses = expenses;
+            } else if (filteredDate == "today") {
+                // if (expenses.date == today.toISOString.split('T')[0]) {
+                filteredDateExpenses = expenses.filter(expense =>
+                    expense.date == formatDate(today));
+                // }
+            } else if (filteredDate == "week") {
+                filteredDateExpenses = expenses.filter(expense =>
+                    expense.date >= formatDate(weekStart) && expense.date <= formatDate(weekEnd));
+                // filteredDateExpenses = "";
+            } else if (filteredDate == "month") {
+                // filteredDateExpenses = "";
+            }
+
+            displayExpenses(filteredDateExpenses);
+        }
+
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
         }
 
         function addTotalExpenses(expense) {
