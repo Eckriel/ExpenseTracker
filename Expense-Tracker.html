@@ -444,6 +444,7 @@
         let filteredExpenses = [];
         let filteredCategoryExpenses = [];
         let filteredDateExpenses = [];
+        let filteredSearchExpenses = [];
 
         const categories = {
             food: { total: 0, display: "🍔 Food & Dining" },
@@ -455,15 +456,11 @@
             other: { total: 0, display: "📦 Other" }
         };
 
-
-        // You'll implement:
-        // - Form submission handling
-        // - Adding expenses to array/storage
-        // - Displaying expenses in the list
-        // - Updating stats (total, monthly, weekly)
-        // - Filtering by category, date, search
-        // - Edit/delete functionality
-        // - Export and other features
+        let currentFilters = {
+            category: "",
+            date: "",
+            search: ""
+        };
 
         function resetForm() {
             expenseFormInput.reset();
@@ -503,18 +500,18 @@
             document.getElementById("expenseList").innerHTML = expenseHTML;
         }
 
-        function filterExpensesByCategory(filteredCategory) {
+        function filterExpensesByCategory(filteredCategory, chosenExpenses) {
 
             if (filteredCategory == "" || filteredCategory == "all") {
-                filteredCategoryExpenses = expenses;
+                filteredCategoryExpenses = chosenExpenses;
             } else {
-                filteredCategoryExpenses = expenses.filter(expense => expense.category === filteredCategory);
+                filteredCategoryExpenses = chosenExpenses.filter(expense => expense.category === filteredCategory);
             }
 
-            displayExpenses(filteredCategoryExpenses);
+            return filteredCategoryExpenses;
         }
 
-        function filterExpensesByDate(filteredDate) {
+        function filterExpensesByDate(filteredDate, chosenExpenses) {
             //Date Calculation
             const today = new Date();
 
@@ -530,27 +527,105 @@
             //Month Calculation
             const [year, monthNum, dayNum] = formatDate(new Date(today)).split('-').map(Number);
 
-
             //Apply filter 
             if (filteredDate == "" || filteredDate == "all") {
-                filteredDateExpenses = expenses;
+                filteredDateExpenses = chosenExpenses;
             } else if (filteredDate == "today") {
-                // if (expenses.date == today.toISOString.split('T')[0]) {
-                filteredDateExpenses = expenses.filter(expense =>
+                filteredDateExpenses = chosenExpenses.filter(expense =>
                     expense.date == formatDate(today));
-                // }
             } else if (filteredDate == "week") {
-                filteredDateExpenses = expenses.filter(expense =>
+                filteredDateExpenses = chosenExpenses.filter(expense =>
                     expense.date > formatDate(weekStart) && expense.date <= formatDate(weekEnd));
             } else if (filteredDate == "month") {
                 const [expenseYear, expenseMonthNum, expenseDayNum] = formatDate(today).split('-').map(Number);
-                filteredDateExpenses = expenses.filter(expense => {
+                filteredDateExpenses = chosenExpenses.filter(expense => {
                     const [expenseYear, expenseMonthNum, expenseDayNum] = expense.date.split('-').map(Number);
                     return expenseMonthNum === monthNum;
                 });
             }
 
-            displayExpenses(filteredDateExpenses);
+            return filteredDateExpenses;
+        }
+
+        function filterExpensesBySearch(chosenExpenses) {
+            filteredSearchExpenses = chosenExpenses.filter(expense =>
+                expense.description.toLowerCase().includes(currentFilters.search.toLowerCase())
+            );
+
+            return filteredSearchExpenses;
+        }
+
+        function applyAllFilters() {
+
+            let hasActiveFilters = false;
+            const isActiveFilter = (value) => value && value !== "" && value !== "all";
+
+            if (isActiveFilter(currentFilters.category)) {
+                const categoryMatches = filterExpensesByCategory(currentFilters.category, expenses);
+                filteredExpenses = categoryMatches;
+                // filteredExpenses = filteredExpenses.concat(categoryMatches);
+                hasActiveFilters = true;
+            }
+
+            console.log("Filtered expenses are: ", filteredExpenses);
+
+            if (isActiveFilter(currentFilters.date)) {
+                const dateMatches = filterExpensesByDate(currentFilters.date, expenses);
+                filteredExpenses = dateMatches;
+                // filteredExpenses = filteredExpenses.concat(dateMatches);
+                hasActiveFilters = true;
+            }
+
+            console.log("Filtered expenses are: ", filteredExpenses);
+
+            if (isActiveFilter(currentFilters.search)) {
+                const searchMatches = filterExpensesBySearch(expenses);
+                filteredExpenses = searchMatches;
+                // filteredExpenses = filteredExpenses.concat(searchMatches);
+                hasActiveFilters = true;
+            }
+
+            console.log("Filtered expenses are: ", filteredExpenses);
+
+            if (isActiveFilter(currentFilters.category) && isActiveFilter(currentFilters.date)) {
+                const categoryMatches = filterExpensesByCategory(currentFilters.category, expenses);
+                const categoryDateMatches = filterExpensesByDate(currentFilters.date, categoryMatches);
+                filteredExpenses = filterExpensesByDate(currentFilters.date, categoryMatches);
+                hasActiveFilters = true;
+            }
+
+            console.log("Filtered expenses are: ", filteredExpenses);
+
+            if (isActiveFilter(currentFilters.category) && isActiveFilter(currentFilters.search)) {
+                const categoryMatches = filterExpensesByCategory(currentFilters.category, expenses);
+                const categorySearchMatches = filterExpensesBySearch(categoryMatches);
+                filteredExpenses = categorySearchMatches;
+                hasActiveFilters = true;
+            }
+
+            if (isActiveFilter(currentFilters.date) && isActiveFilter(currentFilters.search)) {
+                const dateMatches = filterExpensesByDate(currentFilters.date, expenses);
+                const dateSearchMatches = filterExpensesBySearch(dateMatches);
+                filteredExpenses = dateSearchMatches;
+                hasActiveFilters = true;
+            }
+
+            console.log("Filtered expenses are: ", filteredExpenses);
+
+            if (isActiveFilter(currentFilters.category) && isActiveFilter(currentFilters.date) && isActiveFilter(currentFilters.search)) {
+                const categoryMatches = filterExpensesByCategory(currentFilters.category, expenses);
+                const categoryDateMatches = filterExpensesByDate(currentFilters.date, categoryMatches);
+                const categoryDateSearchMatches = filterExpensesBySearch(categoryDateMatches)
+                filteredExpense = categoryDateSearchMatches;
+                hasActiveFilters = true;
+            }
+
+            if (!hasActiveFilters) {
+                filteredExpenses = expenses;
+                console.log("No filters active, showing all expenses");
+            }
+
+            displayExpenses(filteredExpenses);
         }
 
         function formatDate(date) {
@@ -666,14 +741,12 @@
                 console.log("All expenses:", expenses);
                 console.log("Total expenses:", expenses.length);
 
-                //Going to have to check filters then display
-                filterExpensesByCategory(document.getElementById("filterCategory").value);
-                filterExpensesByDate(document.getElementById("filterDate").value);
-                //Show in expense list Probably remove
-                // displayExpenses(expenses);
+                //Show in expense list
+                applyAllFilters();
 
                 //Update top displays
-                addTotalExpenses(newExpense);
+                addTotalExpenses(newExpense)
+
                 addMonthlyExpenses(newExpense);
                 addWeeklyExpenses(newExpense);
                 updateTopCategory(newExpense);
@@ -682,28 +755,38 @@
                 resetForm();
             });
 
+            filterCategory = document.getElementById("filterCategory");
+            filterCategory.addEventListener('change', function () {
+
+                console.log("Category filter changed!");
+                console.log("Selected category: ", this.value);
+
+                currentFilters.category = this.value;
+                applyAllFilters();
+            });
+
+            //Date Filter
+            filterDate = document.getElementById("filterDate");
+            filterDate.addEventListener('change', function () {
+
+                console.log("Date filter changed!");
+                console.log("Selected date: ", this.value);
+
+                currentFilters.date = this.value;
+                applyAllFilters();
+            });
+
+            //Search Filter
+            filterSearch = document.getElementById("searchBox");
+            filterSearch.addEventListener('change', function () {
+                console.log("Search filter changed!");
+                console.log("Searced:", this.value);
+                currentFilters.search = this.value;
+                applyAllFilters();
+            });
         });
 
         //Category Filter
-        filterCategory = document.getElementById("filterCategory");
-        filterCategory.addEventListener('change', function () {
-
-            console.log("Category filter changed!");
-            console.log("Selected category: ", this.value);
-
-            filterExpensesByCategory(this.value);
-
-        });
-
-        //Date Filter
-        filterDate = document.getElementById("filterDate");
-        filterDate.addEventListener('change', function () {
-
-            console.log("Date filter changed!");
-            console.log("Selected date: ", this.value);
-
-            filterExpensesByDate(this.value);
-        });
 
 
 
