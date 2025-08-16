@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>💰 Personal Expense Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -509,7 +510,8 @@
                 <!-- Tab Navigation -->
                 <div class="tab-navigation">
                     <button class="tab-button active" onclick="showTab('expenses')">📋 Expenses</button>
-                    <button class="tab-button" onclick="showTab('analytics')">📊 Analytics</button>
+                    <button class="tab-button" onclick="showTab('analytics')">📊
+                        Analytics</button>
                 </div>
 
                 <!-- Expenses Tab -->
@@ -553,14 +555,15 @@
                     </div>
                 </div>
 
-                <!-- Analytics Tab -->
+                <!-- Tab -->
                 <div id="analytics-tab" class="tab-content">
                     <h2>📊 Spending Analytics</h2>
                     <div class="analytics-grid">
                         <div class="chart-container">
                             <h3>Category Breakdown</h3>
-                            <div class="chart-placeholder">
-                                📊 Category chart will show here
+                            <div class="chart-placeholder" id="categoryPlaceholder">
+                                <!-- 📊 Category chart will show here -->
+                                <canvas id="categoryBreakdownChart"></canvas>
                             </div>
                         </div>
                         <div class="chart-container">
@@ -636,7 +639,7 @@
         // Empty frontend - implement all functionality yourself!
         console.log("Frontend ready - build your expense tracker!");
 
-        let expenses = []; // Declare expenses array ONCE
+        let expenses = [];
         let expenseFormInput;
 
         let totalExpenses = 0;
@@ -649,6 +652,8 @@
         let filteredSearchExpenses = [];
 
         let monthlyBudget = 1000;
+
+        let categoryChart;
 
         const categories = {
             food: { total: 0, display: "🍔 Food & Dining" },
@@ -760,6 +765,7 @@
             `;
             });
 
+            showCategoryBreakdown();
             showMessage('Expense added successfully!', 'success');
             document.getElementById("expenseList").innerHTML = expenseHTML;
         }
@@ -920,9 +926,9 @@
         }
 
         function updateTopCategory(expense) {
-            const expenseCatergory = expense.category;
+            const expenseCategory = expense.category;
             const expenseAmount = expense.amount;
-            switch (expenseCatergory) {
+            switch (expenseCategory) {
                 case 'food':
                     categories.food.total += expenseAmount;
                     break;
@@ -965,6 +971,8 @@
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.classList.remove('active');
             });
+
+            showCategoryBreakdown();
 
             // Show selected tab
             document.getElementById(tabName + '-tab').classList.add('active');
@@ -1073,12 +1081,68 @@
 
         }
 
+        function showCategoryBreakdown() {
+            const ctx = document.getElementById('categoryBreakdownChart');
+
+            const categoryChartValues = {};
+            if (filteredExpenses.length === 0 || !filteredExpenses) {
+                showMessage("No expenses to display in chart!", "error");
+                return;
+            }
+
+            filteredExpenses.forEach(expense =>
+                categoryChartValues[expense.category] = (categoryChartValues[expense.category] || 0) + expense.amount
+            );
+
+            const categoryBreakdown = Object.keys(categoryChartValues);
+            const moneyBreakdown = Object.values(categoryChartValues);
+
+            if (categoryChart) {
+                categoryChart.destroy();
+                catergoryChart = null;
+            }
+
+            categoryChart = new Chart(ctx, {
+                type: 'bar', // Specify the chart type (e.g., 'bar', 'line', 'pie', 'scatter')
+                data: {
+                    labels: categoryBreakdown, // Labels for the data points
+                    datasets: [{
+                        label: '', // Label for the dataset
+                        data: moneyBreakdown,
+                        color: '#ffffff', // The actual data values
+                        borderWidth: 1, // Optional: border width for bars/lines
+                        // indexAxis: 'x'
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#ffffff'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#ffffff'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         //Form
         document.addEventListener('DOMContentLoaded', function () {
 
             //Set default date to today
             setDateToday();
-            displayExpenses(expenses);
+            applyAllFilters();
 
             //Form handlers
             setupFormHandlers();
