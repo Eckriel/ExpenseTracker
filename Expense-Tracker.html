@@ -677,6 +677,19 @@
             document.getElementById('date').value = today;
         }
 
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+
+            const container = document.querySelector('.container');
+            container.insertBefore(messageDiv, container.firstChild);
+
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
         function addExpense() {
             //Add expenses to custom object
             const amount = parseFloat(document.getElementById("amount").value);
@@ -747,6 +760,7 @@
             `;
             });
 
+            showMessage('Expense added successfully!', 'success');
             document.getElementById("expenseList").innerHTML = expenseHTML;
         }
 
@@ -943,26 +957,6 @@
             console.log("Top category changed to: ", categories[categoryLargest].display);
         }
 
-        // function setBudget() {
-        //     const form = document.getElementById('budgetForm');
-        //     monthlyBudget = parseFloat(form.budgetAmount.value);
-        //     showMessage(`Monthly budget set to ${monthlyBudget.toFixed(2)}!`, 'success');
-        //     closeBudgetModal();
-        // }
-
-        function updateExpense() {
-            const formId = parseInt(document.getElementById('editExpenseId').value);
-            const editedExpense = expenses.find(expense => expense.id === formId);
-
-            editedExpense.amount = parseFloat(document.getElementById('editAmount').value);
-            editedExpense.description = document.getElementById('editDescription').value;
-            editedExpense.category = document.getElementById('editCategory').value;
-            editedExpense.date = document.getElementById('editDate').value;
-
-            applyAllFilters(expenses);
-            closeEditModal();
-        }
-
         function showTab(tabName) {
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
@@ -975,6 +969,108 @@
             // Show selected tab
             document.getElementById(tabName + '-tab').classList.add('active');
             event.target.classList.add('active');
+        }
+
+
+        function deleteExpense(id) {
+            if (!confirm('Are you sure you want to delete this expense? This cannot be undone!')) {
+                return;
+            }
+
+            const deleteExpense = expenses.find(expense => expense.id === id);
+            if (!deleteExpense) return;
+
+            expenses.splice(deleteExpense, 1);
+            showMessage('Expense deleted successfully!', 'success');
+            displayExpenses(expenses);
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function editExpense(id) {
+            const expense = expenses.find(exp => exp.id === id);
+            if (!expense) return;
+
+            document.getElementById('editExpenseId').value = expense.id;
+            document.getElementById('editAmount').value = expense.amount;
+            document.getElementById('editDescription').value = expense.description;
+            document.getElementById('editCategory').value = expense.category;
+            document.getElementById('editDate').value = expense.date;
+
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function updateExpense() {
+            const formId = parseInt(document.getElementById('editExpenseId').value);
+            const editedExpense = expenses.find(expense => expense.id === formId);
+
+            editedExpense.amount = parseFloat(document.getElementById('editAmount').value);
+            editedExpense.description = document.getElementById('editDescription').value;
+            editedExpense.category = document.getElementById('editCategory').value;
+            editedExpense.date = document.getElementById('editDate').value;
+            showMessage('All expenses cleared!', 'success');
+            applyAllFilters(expenses);
+            showMessage('Expense updated successfully!', 'success');
+            closeEditModal();
+        }
+
+        function showBudgetModal() {
+            document.getElementById('budgetAmount').value = monthlyBudget;
+            document.getElementById('budgetModal').style.display = 'block';
+        }
+
+        function closeBudgetModal() {
+            document.getElementById('budgetModal').style.display = 'none';
+        }
+
+        function setBudget() {
+            const form = document.getElementById('budgetForm');
+            monthlyBudget = parseFloat(form.budgetAmount.value);
+            showMessage(`Monthly budget set to ${monthlyBudget.toFixed(2)}!`, 'success');
+            closeBudgetModal();
+        }
+
+        function clearAllExpenses() {
+            if (!confirm('Are you sure you want to delete ALL expenses? This cannot be undone!')) {
+                return;
+            }
+
+            expenses.splice(0);
+            showMessage('All expenses cleared!', 'success');
+            displayExpenses(expenses);
+        }
+
+        function exportExpenses() {
+            if (filteredExpenses.length === 0) {
+                showMessage('No expenses to export!', 'error');
+                return;
+            }
+
+            try {
+                const headers = ['Date', 'Amount', 'Description', 'Category'];
+                const csvContent = [headers.join(','), ...filteredExpenses.map(expense => [
+                    expense.date,
+                    expense.amount,
+                    `"${expense.description}"`,
+                    expense.category.charAt(0).toUpperCase() + expense.category.slice(1)
+                ].join(','))
+                ].join('\n');
+
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Expenses.csv';
+                a.click();
+                window.URL.revokeObjectURL(url);
+                showMessage('Expenses exported successfully!', 'success');
+            } catch (error) {
+                showMessage('Error exporting expenses!', 'error');
+            }
+
+
         }
 
         //Form
@@ -991,40 +1087,6 @@
             //Filter handlers
             filterHandler();
         });
-
-        function editExpense(id) {
-            const expense = expenses.find(exp => exp.id === id);
-            if (!expense) return;
-
-            document.getElementById('editExpenseId').value = expense.id;
-            document.getElementById('editAmount').value = expense.amount;
-            document.getElementById('editDescription').value = expense.description;
-            document.getElementById('editCategory').value = expense.category;
-            document.getElementById('editDate').value = expense.date;
-
-            document.getElementById('editModal').style.display = 'block';
-        }
-
-        function deleteExpense(id) {
-            const deleteExpense = expenses.find(expense => expense.id === id);
-            if (!deleteExpense) return;
-
-            expenses.splice(deleteExpense, 1);
-            displayExpenses(expenses);
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
-        }
-
-        function showBudgetModal() {
-            document.getElementById('budgetAmount').value = monthlyBudget;
-            document.getElementById('budgetModal').style.display = 'block';
-        }
-
-        function closeBudgetModal() {
-            document.getElementById('budgetModal').style.display = 'none';
-        }
 
         function setupFormHandlers() {
             // Add expense form
